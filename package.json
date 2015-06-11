@@ -1,6 +1,6 @@
 {
   "name": "ffux",
-  "version": "0.1.0",
+  "version": "0.0.1",
   "description": "Yet another alternative flux implementation",
   "author": "Matti Lankinen <m.lankinen@iki.fi>",
   "license": "MIT",
@@ -16,8 +16,16 @@
   ],
   "main": "ffux.js",
   "scripts": {
+    "dist": "mkdir -p dist && babel ffux.js > dist/ffux.js",
+    "counter-example": "browserify examples/counter.js -t babelify > example-bundle.js && open examples/index.html"
   },
   "dependencies": {
+    "babel": "5.5.6",
     "baconjs": "0.7.65"
+  },
+  "devDependencies": {
+    "babelify": "6.1.2",
+    "browserify": "10.2.4",
+    "react": "0.13.3"
   }
 }
