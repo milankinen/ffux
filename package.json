@@ -1,0 +1,23 @@
+{
+  "name": "ffux",
+  "version": "0.1.0",
+  "description": "Yet another alternative flux implementation",
+  "author": "Matti Lankinen <m.lankinen@iki.fi>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:milankinen/ffux.git"
+  },
+  "keywords": [
+    "flux",
+    "react",
+    "bacon",
+    "frp"
+  ],
+  "main": "ffux.js",
+  "scripts": {
+  },
+  "dependencies": {
+    "baconjs": "0.7.65"
+  }
+}
