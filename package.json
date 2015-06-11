@@ -14,9 +14,10 @@
     "bacon",
     "frp"
   ],
-  "main": "ffux.js",
+  "main": "dist/ffux.js",
   "scripts": {
-    "dist": "mkdir -p dist && babel ffux.js > dist/ffux.js",
+    "prepublish": "npm run dist",
+    "dist": "mkdir -p dist && babel --modules umd ffux.js > dist/ffux.js",
     "counter-example": "browserify examples/counter.js -t babelify > example-bundle.js && open examples/index.html"
   },
   "dependencies": {
