@@ -1,51 +1,81 @@
 const Bacon = require("baconjs")
 
-ffux.run = run
 export default ffux
 
-function ffux({initialState, actions}) {
-  return function (initState) {
-    const initial = arguments.length > 0 ? initState
-      : typeof initialState !== "undefined" ? initialState
-      : undefined
+ffux.run    = run
+ffux.pure   = pureAction
+ffux.impure = impureAction
 
-    const triggers = Object.keys(actions).map(name => {
-      const bus = new Bacon.Bus()
-      const fn  = function() { bus.push.call(bus, {args: argArray(arguments)}) }
-      const cb  = actions[name]
-      return {name, fn, bus, cb}
+function ffux(actions) {
+  return function (initialState, deps) {
+    const state = {value: initialState}
+    const stateChangeHandlers = []
+
+    const storeActions = Object.keys(actions).map(name => {
+      const handler  = actions[name]
+      return {name, handler}
     })
 
-    const patterns = triggers.reduce((memo, {bus, cb}) => [...memo, ...[[bus], step(cb)]], [])
+    let actionInterfaces
+    actionInterfaces = zipObject(storeActions.map(({name, handler}) => {
+      function actionInterface() {
+        const args = argArray(arguments)
+        if (isPure(handler)) {
+          state.value = handler.apply(null, [{state: state.value, deps}, ...args])
+          notifyChanged(state.value)
+        } else {
+          handler.apply(null, [{state: state.value, deps, self: actionInterfaces}, ...args])
+        }
+      }
+      return [name, actionInterface]
+    }))
 
     return {
-      stateP: Bacon.update.apply(Bacon, [initial, ...patterns]),
-      actions: zipObject(triggers.map(({name, fn}) => [name, fn]))
+      initialState,
+      stateChangeHandlers,
+      actionInterfaces,
+      state: () => state.value
+    }
+
+    function isPure(fn) {
+      return fn && fn.__ffux_pure === true
+    }
+
+    function notifyChanged(newState) {
+      stateChangeHandlers.forEach(h => h(newState))
     }
   }
 }
 
 function run(stores, onValueCallback) {
-  const stateTemplate = zipObject(Object.keys(stores).map(name => {
-    const {stateP} = stores[name]
-    return [name, stateP]
+  const state = zipObject(Object.keys(stores).map(name => {
+    const {initialState} = stores[name]
+    return [name, initialState]
   }))
 
   const actions = zipObject(Object.keys(stores).map(name => {
-    const {actions} = stores[name]
-    return [name, actions]
+    const {actionInterfaces} = stores[name]
+    return [name, actionInterfaces]
   }))
 
-  const appStateP = Bacon.combineTemplate(stateTemplate)
-  appStateP.onValue((state) => {
-    onValueCallback({state, actions})
+  Object.keys(stores).forEach(name => {
+    const {stateChangeHandlers} = stores[name]
+    stateChangeHandlers.push((storeState) => {
+      state[name] = storeState
+      onValueCallback({state, actions})
+    })
   })
+  onValueCallback({state, actions})
 }
 
-function step(actionCallback) {
-  return (state, {args}) => {
-    return actionCallback.apply(null, [state, ...args])
-  }
+function pureAction(fn) {
+  fn.__ffux_pure = true
+  return fn
+}
+
+function impureAction(fn) {
+  fn.__ffux_pure = false
+  return fn
 }
 
 function argArray(args) {
