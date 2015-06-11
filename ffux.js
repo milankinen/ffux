@@ -11,7 +11,7 @@ function ffux({initialState, actions}) {
 
     const triggers = Object.keys(actions).map(name => {
       const bus = new Bacon.Bus()
-      const fn  = s => bus.push.call(bus, {value: [s, arguments]})
+      const fn  = _ => bus.push.call(bus, {value: arguments})
       const cb  = actions[name]
       return {name, fn, bus, cb}
     })
@@ -44,7 +44,7 @@ function run(stores, onValueCallback) {
 
 function step(actionCallback) {
   return (state, {value}) => {
-    return actionCallback.apply(null, [state, ...value])
+    return actionCallback.apply(null, [state, ...argArray(value)])
   }
 }
 
