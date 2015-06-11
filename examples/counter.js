@@ -4,26 +4,46 @@ const React = require("react"),
 
 const App = React.createClass({
   render() {
-    const {counter} = this.props.state
-    const {increment, decrement} = this.props.actions.counter
+    const {counter, step} = this.props.state
+    const {incrementCounter, decrementCounter} = this.props.actions.counter
+    const {incrementStep, decrementStep} = this.props.actions.step
     return (
       <div>
-        <div>Counter: {counter}</div>
-        <button onClick={increment}>+</button>
-        <button onClick={decrement}>-</button>
+        <div>Counter: {counter}, Step: {step}</div>
+        <button onClick={incrementCounter}>counter +</button>
+        <button onClick={decrementCounter}>counter -</button>
+        <br />
+        <button onClick={incrementStep}>step +</button>
+        <button onClick={decrementStep}>step -</button>
       </div>
     )
   }
 })
 
+const {run, pure, impure} = ffux
+
+
 const Counter = ffux({
-  actions: {
-    increment: (state, _) => state + 1,
-    decrement: (state, _) => state - 1
-  }
+  _increment: pure(({state, deps: {step}}) => state + step.state()),
+
+  incrementCounter: impure(({state, self}) => {
+    setTimeout(_ => self._increment(), state * 100)
+  }),
+
+  decrementCounter: pure(({state, deps: {step}}) => state - step.state())
+})
+
+const Step = ffux({
+  incrementStep: pure(({state}) => state + 1),
+  decrementStep: pure(({state}) => state - 1)
 })
 
 
-ffux.run({counter: Counter(0)}, (model) => {
-  React.render(<App {...model} />, document.getElementById("app"))
-})
+;(function() {
+  const step    = Step(1)
+  const counter = Counter(10, {step})
+
+  run({counter, step}, (model) => {
+    React.render(<App {...model} />, document.getElementById("app"))
+  })
+})()
