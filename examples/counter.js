@@ -5,21 +5,23 @@ const {createStore, pure, impure} = ffux
 
 
 const Counter = createStore({
-  // pure actions are *synchronous* functions ({state}, ...action args) -> new state
-  // and the store's state can be modified ONLY by using these pure actions
-  increment: pure(({state}, step) => state + step),
+  actions: {
+    // pure actions are *synchronous* functions ({state}, ...action args) -> new state
+    // and the store's state can be modified ONLY by using these pure actions
+    increment: pure(({state}, step) => state + step),
 
-  decrement: pure(({state}, step) => state - step),
+    decrement: pure(({state}, step) => state - step),
 
-  reset: pure(({state}) => 0),
+    reset: pure(({state}) => 0),
 
-  // impure actions can't change state but they can call pure actions
-  // by using "self" reference. thus you can do sync/async/whatever
-  // you want in impure actions: these are the place to e.g. send data
-  // to the backend server
-  resetAsync: impure(({state, self}) => {
-    setTimeout(self.reset, 1000)
-  })
+    // impure actions can't change state but they can call pure actions
+    // by using "self" reference. thus you can do sync/async/whatever
+    // you want in impure actions: these are the place to e.g. send data
+    // to the backend server
+    resetAsync: impure(({state, self}) => {
+      setTimeout(self.reset, 1000)
+    })
+  }
 })
 
 window.onload = function() {
