@@ -13,8 +13,6 @@ No boilerplate. No complex APIs. No external dependencies. Just a set of *pure/i
 
 ## How does it differs from other flux'es
 
-Well... It's super simple. See the examples and you'll know why.
-
 There are furious wars going on concerning the responsibilities of actions and stores.
 Who is responsible for AJAX calls (and more generally: causing side effects)? Others say
 it's stores, another ones say actions. Ugh, what a mess..
@@ -31,6 +29,10 @@ you can cause side effects (make AJAX request, call action from another store, .
 In practice this means that you can build your application's data flow by using 
 only three API functions: `createStore`, `pure` and `impure` (more detailed API
 docs coming soon..).
+
+No separation of actions/stores. No registerers/listeners. No `waitFor`.
+No React `Dispatcher` components. Just your code.
+
 
 ## Examples
 
@@ -177,9 +179,11 @@ const App = React.createClass({
 })
 ```
 
+
 ## Got interested?
 
 Problems? Ideas? Gotchas? Join Gitter chat and let's continue development together!
+
 
 ## License
 
