@@ -1,6 +1,6 @@
 # ffux
 
-Completely library agnostic functional flux implementation
+Completely library agnostic functional flux implementation. **Alpha stage**
 
 [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/milankinen/ffux?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
