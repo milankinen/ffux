@@ -52,7 +52,7 @@ function createStore({actions, reactions}) {
     const setReactions = () => {
       Object.keys(reactions || []).forEach(dep => {
         const handler = reactions[dep],
-              action  = actionInterface(handler)
+              action  = reaction(actionInterface(handler))
 
         if (deps[dep]) {
           const handlers = deps[dep].stateChangeHandlers
@@ -99,12 +99,11 @@ function createStore({actions, reactions}) {
 }
 
 function isReaction(fn) {
-  return fn.__ffux_react === true
+  return fn.__ffux_reaction === true
 }
 
 function reaction(fn) {
-  fn.__ffux_triggers = triggers
-  fn.__ffux_react = true
+  fn.__ffux_reaction = true
   return fn
 }
 
