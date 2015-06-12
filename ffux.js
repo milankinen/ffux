@@ -25,6 +25,10 @@ function ffux(stores) {
         tickFn({state, actions})
       })
     })
+    Object.keys(stores).forEach(name => {
+      const {setReactions} = stores[name]
+      setReactions()
+    })
     tickFn({state, actions})
   }
 
@@ -35,7 +39,7 @@ function ffux(stores) {
   }
 }
 
-function createStore(actions) {
+function createStore({actions, reactions}) {
   return function (initialState, deps) {
     const state = {value: initialState}
     const stateChangeHandlers = []
@@ -45,9 +49,36 @@ function createStore(actions) {
       return {name, handler}
     })
 
+    const setReactions = () => {
+      Object.keys(reactions || []).forEach(dep => {
+        const handler = reactions[dep],
+              action  = actionInterface(handler)
+
+        if (deps[dep]) {
+          const handlers = deps[dep].stateChangeHandlers
+          for(let i = 0 ; i < handlers.length; i++) {
+            if (isReaction(handlers[i])) handlers.splice(i, 1)
+          }
+          handlers.push(action)
+        }
+      })
+    }
+
     let actionInterfaces
     actionInterfaces = zipObject(storeActions.map(({name, handler}) => {
-      function actionInterface() {
+      return [name, actionInterface(handler)]
+    }))
+
+    return {
+      initialState,
+      stateChangeHandlers,
+      actionInterfaces,
+      setReactions,
+      state: () => state.value
+    }
+
+    function actionInterface(handler) {
+      return function() {
         const args = argArray(arguments)
         if (isPure(handler)) {
           state.value = handler.apply(null, [{state: state.value, deps}, ...args])
@@ -56,16 +87,7 @@ function createStore(actions) {
           handler.apply(null, [{state: state.value, deps, self: actionInterfaces}, ...args])
         }
       }
-      return [name, actionInterface]
-    }))
-
-    return {
-      initialState,
-      stateChangeHandlers,
-      actionInterfaces,
-      state: () => state.value
     }
-
     function isPure(fn) {
       return fn && fn.__ffux_pure === true
     }
@@ -74,6 +96,16 @@ function createStore(actions) {
       stateChangeHandlers.forEach(h => h(newState))
     }
   }
+}
+
+function isReaction(fn) {
+  return fn.__ffux_react === true
+}
+
+function reaction(fn) {
+  fn.__ffux_triggers = triggers
+  fn.__ffux_react = true
+  return fn
 }
 
 function pureAction(fn) {
