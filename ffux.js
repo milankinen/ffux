@@ -17,7 +17,7 @@ function ffux(stores) {
     return [name, actionInterfaces]
   }))
 
-  const dispatchFn = (tickFn) => {
+  const listenFn = (tickFn) => {
     Object.keys(stores).forEach(name => {
       const {stateChangeHandlers} = stores[name]
       stateChangeHandlers.push((storeState) => {
@@ -33,7 +33,7 @@ function ffux(stores) {
   }
 
   return {
-    dispatch: dispatchFn,
+    listen: listenFn,
     state: () => state,
     actions: () => actions
   }

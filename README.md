@@ -70,7 +70,7 @@ const Counter = createStore({
 window.onload = function() {
   // we can create store and set initial state to it and then
   // construct our ffux dispacher by using the template object
-  ffux({counter: Counter(10)}).dispatch((model) => {
+  ffux({counter: Counter(10)}).listen((model) => {
     React.render(<App {...model} />, document.getElementById("app"))
   })
 }
@@ -147,7 +147,7 @@ window.onload = function() {
         // explicitly -> no circular references -> less bugs
         items  = Items({saved: [], nextText: ""}, {filter})
 
-  ffux({items, filter}).dispatch((model) => {
+  ffux({items, filter}).listen((model) => {
     React.render(<App {...model} />, document.getElementById("app"))
   })
 }

@@ -27,7 +27,7 @@ const Counter = createStore({
 window.onload = function() {
   // we can create store and set initial state to it and then
   // construct our ffux dispacher by using the template object
-  ffux({counter: Counter(10)}).dispatch((model) => {
+  ffux({counter: Counter(10)}).listen((model) => {
     React.render(<App {...model} />, document.getElementById("app"))
   })
 }
