@@ -11,8 +11,9 @@
   "keywords": [
     "flux",
     "react",
-    "bacon",
-    "frp"
+    "functional programming",
+    "immutable",
+    "pure"
   ],
   "main": "dist/ffux.js",
   "scripts": {
