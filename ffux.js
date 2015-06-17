@@ -1,120 +1,94 @@
-
 export default ffux
 
 ffux.createStore = createStore
-ffux.pure        = pureAction
-ffux.impure      = impureAction
+ffux.pure        = pure
+ffux.impure      = impure
 
-
-function ffux(stores) {
-  const state = zipObject(Object.keys(stores).map(name => {
-    const {initialState} = stores[name]
-    return [name, initialState]
-  }))
-
-  const actions = zipObject(Object.keys(stores).map(name => {
-    const {actionInterfaces} = stores[name]
-    return [name, actionInterfaces]
-  }))
-
-  const listenFn = (tickFn) => {
-    Object.keys(stores).forEach(name => {
-      const {stateChangeHandlers} = stores[name]
-      stateChangeHandlers.push((storeState) => {
-        state[name] = storeState
-        tickFn({state, actions})
-      })
-    })
-    Object.keys(stores).forEach(name => {
-      const {setReactions} = stores[name]
-      setReactions()
-    })
-    tickFn({state, actions})
+function pure(fn) {
+  return function action(store, notifyAllowed) {
+    return function() {
+      const args = argArray(arguments),
+            deps = zipObject(keys(store.deps).map(d => [d, store.deps[d].state()]))
+      store.state = fn.apply(null, [{state: store.state, deps}, ...args])
+      if (notifyAllowed) store.notify()
+    }
   }
+}
 
-  return {
-    listen: listenFn,
-    state: () => state,
-    actions: () => actions
+function impure(fn) {
+  return function action(store) {
+    return function() {
+      const args  = argArray(arguments),
+            state = () => store.state
+      fn.apply(null, [{state, deps: store.deps, self: store.actions}, ...args])
+    }
   }
 }
 
 function createStore({actions, reactions}) {
   return function (initialState, deps) {
-    const state = {value: initialState}
-    const stateChangeHandlers = []
-
-    const storeActions = Object.keys(actions).map(name => {
-      const handler  = actions[name]
-      return {name, handler}
-    })
-
-    const setReactions = () => {
-      Object.keys(reactions || []).forEach(dep => {
-        const handler = reactions[dep],
-              action  = reaction(actionInterface(handler))
-
-        if (deps[dep]) {
-          const handlers = deps[dep].stateChangeHandlers
-          for(let i = 0 ; i < handlers.length; i++) {
-            if (isReaction(handlers[i])) handlers.splice(i, 1)
-          }
-          handlers.push(action)
-        }
-      })
-    }
-
-    let actionInterfaces
-    actionInterfaces = zipObject(storeActions.map(({name, handler}) => {
-      return [name, actionInterface(handler)]
-    }))
-
-    return {
-      initialState,
-      stateChangeHandlers,
-      actionInterfaces,
-      setReactions,
-      state: () => state.value
-    }
-
-    function actionInterface(handler) {
-      return function() {
-        const args = argArray(arguments)
-        if (isPure(handler)) {
-          state.value = handler.apply(null, [{state: state.value, deps}, ...args])
-          notifyChanged(state.value)
-        } else {
-          handler.apply(null, [{state: state.value, deps, self: actionInterfaces}, ...args])
-        }
+    const store = {
+      state: initialState,
+      deps: deps || {},
+      listeners: [],
+      listen(cb) {
+        this.listeners.push(cb)
+      },
+      notify() {
+        this.listeners.forEach(l => l(this.state))
       }
     }
-    function isPure(fn) {
-      return fn && fn.__ffux_pure === true
-    }
 
-    function notifyChanged(newState) {
-      stateChangeHandlers.forEach(h => h(newState))
+    store.actions = zipObject(keys(actions).map(name => [name, actions[name].call(null, store, true)]))
+
+    // setup reaction chain
+    keys(reactions).forEach(name => {
+      const reaction   = reactions[name].call(null, store, false),
+            dependency = deps && deps[name]
+      if (dependency) {
+        dependency.__internalStore().listen((dep) => {
+          const stateBefore = store.state
+          reaction(dep)
+          if (stateBefore !== store.state) {
+            defer(() => store.notify())
+          }
+        })
+      }
+    })
+
+    return {
+      __internalStore: () => store,
+      state:           () => store.state,
+      actions:         () => store.actions
     }
   }
 }
 
-function isReaction(fn) {
-  return fn.__ffux_reaction === true
-}
+function ffux(stores) {
+  return (function dispatcher(allActions) {
+    return {
+      state:   () => buildState,
+      actions: () => allActions,
+      flatten: () => dispatcher(values(actions).reduce((all, a) => [...all, ...a], a)),
+      listen:  (dispatch) => {
+        // bind state change listeners
+        keys(stores).forEach(name => {
+          const store = stores[name].__internalStore()
+          if (store.listeners.length === 0) {
+            store.listen(() => {
+              dispatch({state: buildState(stores), actions: allActions})
+            })
+          }
+        })
+        // initial
+        dispatch({state: buildState(stores), actions: allActions})
+      }
+    }
+  })(zipObject(keys(stores).map(name => [name, stores[name].actions()])))
 
-function reaction(fn) {
-  fn.__ffux_reaction = true
-  return fn
-}
-
-function pureAction(fn) {
-  fn.__ffux_pure = true
-  return fn
-}
-
-function impureAction(fn) {
-  fn.__ffux_pure = false
-  return fn
+  function buildState(stores) {
+    return zipObject(keys(stores).map(name => [name, stores[name].state()]))
+  }
 }
 
 function argArray(args) {
@@ -125,4 +99,16 @@ function zipObject(pairs) {
   const obj = {}
   pairs.forEach(([k, v]) => obj[k] = v)
   return obj
+}
+
+function keys(o) {
+  return Object.keys(o || {})
+}
+
+function values(o) {
+  return keys(o || {}).map(k => o[k])
+}
+
+function defer(fn) {
+  return setTimeout(fn, 0)
 }
