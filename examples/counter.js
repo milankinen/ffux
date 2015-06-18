@@ -3,7 +3,6 @@ const React = require("react"),
 
 const {createStore, pure, impure} = ffux
 
-
 const Counter = createStore({
   actions: {
     // pure actions are *synchronous* functions ({state}, ...action args) -> new state
@@ -24,14 +23,6 @@ const Counter = createStore({
   }
 })
 
-window.onload = function() {
-  // we can create store and set initial state to it and then
-  // construct our ffux dispacher by using the template object
-  ffux({counter: Counter(10)}).listen((model) => {
-    React.render(<App {...model} />, document.getElementById("app"))
-  })
-}
-
 const App = React.createClass({
   render() {
     // passed model contains two properties:
@@ -47,11 +38,14 @@ const App = React.createClass({
     return (
       <div>
         <div>Counter: {counter}</div>
-        {/* use step = 2 for incrementing, step = 1 for decrementing */}
-        <button onClick={() => increment(2)}>+</button>
+        <button onClick={() => increment(2)}>+2</button>
         <button onClick={() => decrement(1)}>-</button>
         <button onClick={() => resetAsync()}>reset</button>
       </div>
     )
   }
+})
+
+ffux({counter: Counter(10)}).listen((model) => {
+  React.render(<App {...model} />, document.getElementById("app"))
 })
