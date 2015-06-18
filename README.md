@@ -68,19 +68,6 @@ const Counter = createStore({
     })
   }
 })
-const Counter = createStore({
-  actions: {
-    increment: pure(({state}, step) => state + step),
-    
-    decrement: pure(({state}, step) => state - step),
-    
-    resetAsync: impure(({state, self}, value) => {
-      // pure actions can be called by using `self`
-      // note also that state is a function in impure actions due to async nature of impure action
-      setTimeout(() => self.increment(value - state())
-    }
-  }
-})
 ```
 
 And that's it! You've created your first store. Like in React's `createClass`,
