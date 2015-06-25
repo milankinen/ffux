@@ -1,114 +1,118 @@
+const Bacon = require("baconjs")
+
 export default ffux
-
 ffux.createStore = createStore
-ffux.pure        = pure
-ffux.impure      = impure
 
-function pure(fn) {
-  return function action(store, notifyAllowed) {
-    return function() {
-      const args = argArray(arguments),
-            deps = zipObject(keys(store.deps).map(d => [d, store.deps[d].state()]))
-      store.state = fn.apply(null, [{state: store.state, deps}, ...args])
-      if (notifyAllowed) store.notify()
+
+function ffux(stores, initialState = {}) {
+  return {listen}
+
+  function listen(callback) {
+    const ready   = [],
+          pending = keys(stores)
+
+    init()
+    const actions = composeActions(ready)
+    const stateP  = composeStateP(ready, initialState, actions)
+    subscribe(stateP, actions)
+
+    function subscribe(stateP, actions) {
+      stateP.onValue(state => callback({state, actions}))
     }
-  }
-}
 
-function impure(fn) {
-  return function action(store) {
-    return function() {
-      const args  = argArray(arguments),
-            state = () => store.state
-      fn.apply(null, [{state, deps: store.deps, self: store.actions}, ...args])
-    }
-  }
-}
+    function composeStateP(readyStores, initialState) {
+      const template = zipObject(readyStores.map(({name, store}) => {
+        const prop = createProperty(store.state(), initialState[name])
+        return [name, prop]
+      }))
+      return Bacon.combineTemplate(template)
 
-function createStore({actions, reactions}) {
-  return function (initialState, deps) {
-    const store = {
-      state: initialState,
-      deps: deps || {},
-      listeners: [],
-      listen(cb) {
-        this.listeners.push(cb)
-      },
-      notify() {
-        this.listeners.forEach(l => l(this.state))
+      function createProperty(streamOrProperty, propertyInitialState) {
+        try {
+          return streamOrProperty.toProperty(propertyInitialState)
+        } catch (ignore) {
+          return streamOrProperty.toProperty()
+        }
       }
     }
 
-    store.actions = zipObject(keys(actions).map(name => [name, actions[name].call(null, store, true)]))
+    function composeActions(readyStores) {
+      const actions = {}
+      readyStores.forEach(({store}) => keys(store.actions()).forEach(a => actions[a] = store.actions()[a]))
+      return actions
+    }
 
-    // setup reaction chain
-    keys(reactions).forEach(name => {
-      const reaction   = reactions[name].call(null, store, false),
-            dependency = deps && deps[name]
-      if (dependency) {
-        dependency.__internalStore().listen((dep) => {
-          const stateBefore = store.state
-          reaction(dep)
-          if (stateBefore !== store.state) {
-            defer(() => store.notify())
-          }
+    function init() {
+      const before = pending.length
+      let i = before
+      while (--i >= 0) {
+        const name   = pending[i],
+              initFn = stores[name] || {},
+              deps   = initFn.deps || {}
+
+        const depNames  = keys(deps)
+        const readyDeps = []
+        depNames.forEach(dName => {
+          const depStore = findReady(deps[dName])
+          if (depStore) readyDeps.push([dName, depStore])
         })
+        if (readyDeps.length === depNames.length) {
+          ready.push({store: initFn(initialState, zipObject(readyDeps)), name, initFn})
+          pending.splice(i, 1)
+        }
       }
-    })
-
-    return {
-      __internalStore: () => store,
-      state:           () => store.state,
-      actions:         () => store.actions
+      if (pending.length && before === pending.length) {
+        throw new Error("Invalid deps")
+      } else if (pending.length) {
+        init()
+      }
+    }
+    function findReady(fn) {
+      for (let i = 0 ; i < ready.length ; i++) {
+        if (ready[i].initFn === fn) return ready[i].store
+      }
     }
   }
 }
 
-function ffux(stores) {
-  return (function dispatcher(allActions) {
-    return {
-      state:   () => buildState,
-      actions: () => allActions,
-      flatten: () => dispatcher(values(actions).reduce((all, a) => [...all, ...a], a)),
-      listen:  (dispatch) => {
-        // bind state change listeners
-        keys(stores).forEach(name => {
-          const store = stores[name].__internalStore()
-          if (store.listeners.length === 0) {
-            store.listen(() => {
-              dispatch({state: buildState(stores), actions: allActions})
-            })
-          }
-        })
-        // initial
-        dispatch({state: buildState(stores), actions: allActions})
+function createStore({state, actions: actionNames = []}) {
+  const actionsByName = zipObject(actionNames.map(a => {
+    const bus = new Bacon.Bus()
+    return [a, {
+      stream: bus.map(noop),
+      fn: (...args) => {
+        if (args.length === 1) {
+          bus.push(args[0])
+        } else {
+          bus.push(args)
+        }
       }
-    }
-  })(zipObject(keys(stores).map(name => [name, stores[name].actions()])))
+    }]
+  }))
+  const actionStreams    = zipObject(keys(actionsByName).map(name => [name, actionsByName[name].stream]))
+  const actionInterfaces = zipObject(keys(actionsByName).map(name => [name, actionsByName[name].fn]))
 
-  function buildState(stores) {
-    return zipObject(keys(stores).map(name => [name, stores[name].state()]))
+  return function store(dependencyDefinitions) {
+    init.deps = dependencyDefinitions
+    return init
+
+    function init(initialState, dependencies) {
+      const stateP = state(initialState, actionStreams, dependencies)
+      return {state: () => stateP, actions: () => actionInterfaces}
+    }
   }
 }
 
-function argArray(args) {
-  return Array.prototype.slice.call(args)
+function keys(obj) {
+  return Object.keys(obj)
 }
 
-function zipObject(pairs) {
+function zipObject(fields) {
   const obj = {}
-  pairs.forEach(([k, v]) => obj[k] = v)
+  fields.forEach(([k, v]) => obj[k] = v)
   return obj
 }
 
-function keys(o) {
-  return Object.keys(o || {})
-}
-
-function values(o) {
-  return keys(o || {}).map(k => o[k])
-}
-
-function defer(fn) {
-  return setTimeout(fn, 0)
+function noop(arg) {
+  return arg
 }
