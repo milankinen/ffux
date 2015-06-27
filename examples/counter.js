@@ -1,17 +1,16 @@
 const React = require("react"),
-      ffux  = require("../ffux")
+      ffux  = require("../index")
 
 const {createStore} = ffux
 
 const Counter = createStore({
   actions: ['incrementN', 'decrementOne'],
   state: (initialState, actionStreams) => {
-    const {counter} = initialState
     const {incrementN, decrementOne} = actionStreams
     // All Bacon.js tricks are permitted here!
     return incrementN
       .merge(decrementOne.map(-1))
-      .scan(counter, (state, delta) => state + delta)
+      .scan(initialState, (state, delta) => state + delta)
   }
 })
 
@@ -35,9 +34,8 @@ const App = React.createClass({
   }
 })
 
-const initialState = {counter: 10}
-const stateModel   = {counter: Counter()}
-const dispatcher   = ffux(stateModel, initialState)
+const stateModel   = {counter: Counter(10)}
+const dispatcher = ffux(stateModel)
 
 // let's rock
 dispatcher.listen((model) => {
