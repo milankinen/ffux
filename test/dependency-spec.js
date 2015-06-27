@@ -24,7 +24,7 @@ describe("dependencies", () => {
           items  = Items(["foobar", "tsers"], {filter})
 
     listen(ffux({filter, items}))
-      .step(({state: {items, filter}, actions: {resetFilter}}) => {
+      .step(({state: {items, filter}, actions: {filter: {resetFilter}}}) => {
         expect(filter).to.equal("")
         expect(items).to.deep.equal(["foobar", "tsers"])
         resetFilter("tse")
