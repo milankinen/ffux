@@ -1,6 +1,6 @@
 const React = require("react"),
       Bacon = require("baconjs"),
-      ffux  = require("../lib/ffux-bacon"),
+      ffux  = require("ffux"),
       _     = require("lodash")
 
 const {createStore} = ffux

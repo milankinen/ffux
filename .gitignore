@@ -9,4 +9,5 @@ node_modules
 
 dist
 coverage
-example-bundle.js
+bundle.js
+.bundle*

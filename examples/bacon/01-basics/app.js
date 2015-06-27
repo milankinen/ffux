@@ -1,5 +1,5 @@
 const React = require("react"),
-      ffux  = require("../lib/ffux-bacon")
+      ffux  = require("ffux")
 
 const {createStore} = ffux
 
