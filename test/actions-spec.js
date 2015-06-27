@@ -1,5 +1,6 @@
 const {expect} = require("chai"),
       Bacon    = require("baconjs"),
+      {listen} = require("./test-utils"),
       ffux     = require("../lib/ffux-bacon")
 
 const {createStore} = ffux
@@ -23,32 +24,28 @@ describe("actions", () => {
   })
 
   it("can be called like normal functions", done => {
-    let count = 0
-    ffux({a: Counter(2), b: Plus2(1)}).listen(({state: {a, b}, actions}) => {
-      count++
-      if (count === 1) {
+    listen(ffux({a: Counter(2), b: Plus2(1)}))
+      .step(({state: {a, b}, actions: {increment}}) => {
         expect(a).to.equal(2)
         expect(b).to.equal(3)
-        actions.increment(2)
-      } else {
+        increment(2)
+      })
+      .step(({state: {a, b}}) => {
         expect(a).to.equal(4)
         expect(b).to.equal(3)
         done()
-      }
-    })
+      })
+      .exec()
   })
 
   it("supports multiple arguments via array", done => {
-    let count = 0
-    ffux({a: Counter(2), b: Plus2(1)}).listen(({state: {a}, actions}) => {
-      count++
-      if (count === 1) {
-        actions.reset(10, 5)
-      } else {
+    listen(ffux({a: Counter(2), b: Plus2(1)}))
+      .step(({actions: {reset}}) => reset(10, 5))
+      .step(({state: {a}}) => {
         expect(a).to.equal(5)
         done()
-      }
-    })
+      })
+      .exec()
   })
 
   it("initialization throws an exception if action names are clashing", (done) => {
