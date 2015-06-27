@@ -1,7 +1,7 @@
 {
   "name": "ffux",
-  "version": "0.3.0",
-  "description": "Yet another alternative flux implementation",
+  "version": "0.4.0",
+  "description": "Functional Reactive Flux implementation without boilerplate",
   "author": "Matti Lankinen <m.lankinen@iki.fi>",
   "license": "MIT",
   "repository": {
@@ -12,8 +12,10 @@
     "flux",
     "react",
     "functional programming",
-    "immutable",
-    "pure"
+    "frp",
+    "functional reactive programming",
+    "rx",
+    "bacon"
   ],
   "main": "index.js",
   "scripts": {
