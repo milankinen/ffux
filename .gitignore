@@ -8,4 +8,5 @@ node_modules
 *.iml
 
 dist
+coverage
 example-bundle.js

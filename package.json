@@ -17,6 +17,8 @@
   ],
   "main": "index.js",
   "scripts": {
+    "test": "mocha --compilers js:babel/register --recursive test/*",
+    "test-with-coverage": "istanbul cover ./node_modules/mocha/bin/_mocha -- --compilers js:babel/register --recursive test/*",
     "prepublish": "npm run dist",
     "dist": "mkdir -p dist && babel lib --source-maps inline --modules umd --out-dir dist",
     "counter-example": "browserify examples/counter.js -t babelify > example-bundle.js && open examples/index.html",
@@ -26,6 +28,10 @@
     "babel": "5.5.6",
     "babelify": "6.1.2",
     "browserify": "10.2.4",
+    "chai": "3.0.0",
+    "codecov.io": "0.1.4",
+    "istanbul": "0.3.16",
+    "mocha": "2.2.5",
     "react": "0.13.3"
   }
 }
