@@ -14,7 +14,7 @@ describe("dependencies", () => {
 
   const Items = createStore({
     state: (items, _, {filter}) => {
-      return Bacon.combineTemplate({items, f: filter.state()})
+      return Bacon.combineTemplate({items, f: filter})
         .map(({items, f}) => items.filter(it => it.indexOf(f) !== -1))
     }
   })
