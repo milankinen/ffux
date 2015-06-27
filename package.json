@@ -15,10 +15,10 @@
     "immutable",
     "pure"
   ],
-  "main": "dist/ffux.js",
+  "main": "index.js",
   "scripts": {
     "prepublish": "npm run dist",
-    "dist": "mkdir -p dist && babel --modules umd ffux.js > dist/ffux.js",
+    "dist": "mkdir -p dist && babel lib --source-maps inline --modules umd --out-dir dist",
     "counter-example": "browserify examples/counter.js -t babelify > example-bundle.js && open examples/index.html",
     "todos-example": "browserify examples/todos.js -t babelify > example-bundle.js && open examples/index.html"
   },
