@@ -4,6 +4,9 @@ Flux implementation for Functional Reactive Programming with [Bacon.js](https://
 and minimal boilerplate. (RxJs support coming soon...)
 
 [![npm version](https://badge.fury.io/js/ffux.svg)](http://badge.fury.io/js/ffux)
+[![Build Status](https://travis-ci.org/milankinen/ffux.svg?branch=master)](https://travis-ci.org/milankinen/ffux)
+[![codecov.io](http://codecov.io/github/milankinen/ffux/coverage.svg?branch=master)](http://codecov.io/github/milankinen/ffux?branch=master)
+
 [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/milankinen/ffux?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
 
