@@ -46,12 +46,11 @@ const {createStore} = ffux
 const Counter = createStore({
   actions: ["incrementN", "decrementOne"],
   state: (initialState, actionStreams) => {
-    const {counter} = initialState
     const {incrementN, decrementOne} = actionStreams
     // All Bacon.js tricks are permitted here!
     return incrementN
       .merge(decrementOne.map(-1))
-      .scan(counter, (state, delta) => state + delta)
+      .scan(initialState, (state, delta) => state + delta)
   }
 })
 
@@ -59,11 +58,11 @@ const App = React.createClass({
   render() {
     // ffux model contains two properties:
     //   * "state" contains the current state of the application
-    //   * "actions" contains the actions that can be performed
+    //   * "actions" contains the actions that can be performed (per store)
     const {counter} = this.props.state
 
     // actions are just functions that can be called with arguments normally
-    const {incrementN, decrementOne} = this.props.actions
+    const {incrementN, decrementOne} = this.props.actions.counter
 
     return (
       <div>
@@ -75,9 +74,8 @@ const App = React.createClass({
   }
 })
 
-const initialState = {counter: 10}
-const stateModel   = {counter: Counter()}
-const dispatcher   = ffux(stateModel, initialState)
+const stateModel   = {counter: Counter(10)}
+const dispatcher   = ffux(stateModel)
 
 // let's rock
 dispatcher.listen((model) => {
@@ -112,10 +110,10 @@ initialization function.
 const CounterStore = ffux.createStore({
   actions: ["icrement", "resetAsync"],
   // Parameters in state initialization function:
-  //  1. initial state (passed when initializing stores)
+  //  1. initial state
   //  2. action streams of this store (Bacon.EventStreams) mapped behind their names
-  //  3. dependency stores (see below)
-  state: ({counter}, {increment, resetAsync}) => {
+  //  3. dependencies if any (see below)
+  state: (counter, {increment, resetAsync}) => {
     // Here comes all the business logic of the store!
     // You are free to implement the data flow by using whatever FRP means you want
     const resetS   = resetAsync.delay(1000)
@@ -128,39 +126,114 @@ const CounterStore = ffux.createStore({
   }
 })
 ```
+
+Actions can take either zero, one or many parameters. When creating actions
+with zero or one parameter then that parameter is passed to the state stream
+as it is:
+
+```javascript
+const Filter = ffux.createStore({
+  actions: ["resetFilter"],
+  state: (initialState, {resetFilter}) => {
+    const trimmed = resetFilter.map(value => value.trim())
+    ...
+  }
+})
+// and usage inside your app
+resetFilter("tsers")
+```
+
+Because event streams emit single events, multiple parameters are converted
+into an array that is passed to the event stream:
+
+```javascript
+const Filter = ffux.createStore({
+  actions: ["resetFilter"],
+  state: (initialState, {resetFilter}) => {
+    const trimmedAsync = resetFilter.flatMap(([value, timeout]) => Bacon.later(timeout, value.trim()))
+    ...
+  })
+})
+// and usage inside your app
+resetFilter("tsers", 1000)
+```
+
 ### Instantiation of stores
 
 Store instances can be created by using the `StoreFactory` function. It takes
-one optional parameter, dependencies (other store instances).
+the store's initial state and optional dependencies (see below).
 
 ```javascript 
-const counter = Counter()
+const counter = Counter(10)
 ```
-### `ffux(stateModel, initialState) -> Dispatcher`
+### `ffux(stateModel) -> Dispatcher`
 
 Once you've created your stores, you can create a dispatcher instance by using
-the stores. Dispatcher takes two arguments:
+the stores. Dispatcher takes one arguments:
 
-1. State model which is a plain object of stores. *This state model should reflect your (initial) state*
-2. Initial state that initializes your state streams
+1. State model which is a plain object of stores instances. *This state model should reflect your (initial) state*
 
 Dispacher has one method: `.listen(callback)`. It can be used to listen your
 state changes. When the application state changes, `{state, actions}` object 
-containing the current state (schema reflects the state model) and possible 
-actions (all actions from your stores) is passed to the callback function.
+containing the current state (schema reflects the state model) and actions 
+is passed to the callback function.
 
 This is the place to render your UI:
 
 ```javascript
-const dispatcher = ffux({counter}, {counter: 0})
+const dispatcher = ffux({counter})
 dispatcher.listen(({state, actions}) => {
+  // state == {counter: 10}
+  // actions == {counter: {increment: Function(int), resetAsync: Function()}}
   React.render(<MyApp state={state} actions={actions} />, ...)
 })
 ```
+
+#### Flattening actions
+
+By default, actions are passed using the same schema as the state model. However,
+you can flatten them into `actions` object by passing `flatActions = true` option
+to the dispatcher. In that case remember that if action names clashes, an error
+is thrown during dispatcher initialization:
+
+```javascript
+const dispatcher = ffux({counter, filter})
+dispatcher.listen(({state, actions}) => {
+  // actions == {increment: Function(int), resetAsync: Function(), resetFilter: Function(string)}
+  React.render(<MyApp state={state} actions={actions} />, ...)
+})
+```
+
 ### Declaring dependencies between stores
 
-TODO: docs...
+In complex applications, dependencies are inevitable. Normal Flux implementations
+use signals and publish-subscribe to resolve this. This method provides extremely
+loose coupling but it has a major drawback: when dependencies become more complex, 
+their management becomes chaotic and unpredictable because causations are not
+visible, thus there are high possibility to introduce e.g. cyclic dependencies.
 
+`ffux` takes another approach: dependencies between stores are declared explicitly.
+This ensures you to think about responsibilities of your stores and reduce the
+possibility of circular dependencies and such kind of bugs.
+
+In `ffux` you can declare dependencies during the store instantiation by passing
+the dependencies as a second parameter to the store. Then these dependencies are
+available in the store's state initialization:
+
+```javascript 
+const Todos = createStore({
+  // dependencies are available via the 3rd parameter. they are the state
+  // streams of the stores and can be used like any other EventStream
+  state: (items, {}, {filter}) => {
+    return Bacon.combineTemplate({items, filter})
+      .map(({items, filter}) => items.indexOf(filter) !== -1)
+  }
+})
+
+const filter = Filter("")
+const todos  = Todos([], {filter})
+ffux({todos, filter}).listen(...)
+```
 
 ## License
 
