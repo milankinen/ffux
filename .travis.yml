@@ -1,0 +1,10 @@
+language: node_js
+node_js:
+  - "0.12"
+  - "0.11"
+  - "0.10"
+  - "iojs-v1.0.4"
+script:
+  - npm run test-with-coverage
+after_success:
+  - cat ./coverage/coverage.json | ./node_modules/codecov.io/bin/codecov.io.js
