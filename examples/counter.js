@@ -1,5 +1,5 @@
 const React = require("react"),
-      ffux  = require("../index")
+      ffux  = require("../lib/ffux-bacon")
 
 const {createStore} = ffux
 
@@ -22,7 +22,7 @@ const App = React.createClass({
     const {counter} = this.props.state
 
     // actions are just functions that can be called with arguments normally
-    const {incrementN, decrementOne} = this.props.actions
+    const {incrementN, decrementOne} = this.props.actions.counter
 
     return (
       <div>
@@ -34,7 +34,7 @@ const App = React.createClass({
   }
 })
 
-const stateModel   = {counter: Counter(10)}
+const stateModel = {counter: Counter(10)}
 const dispatcher = ffux(stateModel)
 
 // let's rock

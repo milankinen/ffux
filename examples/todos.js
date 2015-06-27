@@ -1,17 +1,17 @@
 const React = require("react"),
       Bacon = require("baconjs"),
-      ffux  = require("../ffux"),
+      ffux  = require("../lib/ffux-bacon"),
       _     = require("lodash")
 
 const {createStore} = ffux
 
 const Todos = createStore({
   actions: ['createItem'],
-  state: ({items}, {createItem}, {filter}) => {
+  state: (items, {createItem}, {filter}) => {
     const itemsP = createItem.scan(items, (todos, newTodo) => [...todos, {text: newTodo}])
 
     return Bacon
-      .combineTemplate({items: itemsP, filter: filter.state()})
+      .combineTemplate({items: itemsP, filter: filter})
       .map(({items, filter}) => items.filter(it => isDisplayable(it, filter)))
 
     function isDisplayable(item, filter) {
@@ -22,15 +22,15 @@ const Todos = createStore({
 
 const NewTodo = createStore({
   actions: ['setNewTodoText'],
-  state: ({newTodoText}, {setNewTodoText}) => {
-    return setNewTodoText.scan(newTodoText || "", (_, newText) => newText)
+  state: (newTodoText, {setNewTodoText}) => {
+    return setNewTodoText.scan(newTodoText, (_, newText) => newText)
   }
 })
 
 const Filter = createStore({
   actions: ['resetFilter'],
-  state: ({filter}, {resetFilter}) => {
-    return resetFilter.scan(filter || "", (_, newFilter) => newFilter)
+  state: (filter, {resetFilter}) => {
+    return resetFilter.scan(filter, (_, newFilter) => newFilter)
   }
 })
 
@@ -65,11 +65,11 @@ const App = React.createClass({
 })
 
 ;(function() {
-  const filter  = Filter()
-  const items   = Todos({filter})
-  const newTodo = NewTodo()
+  const filter  = Filter("")
+  const items   = Todos([], {filter})
+  const newTodo = NewTodo("")
 
-  ffux({filter, items, newTodo}, {items: []})
+  ffux({filter, items, newTodo}, {flatActions: true})
     .listen((model) => {
       React.render(<App {...model} />, document.getElementById("app"))
     })
