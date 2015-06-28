@@ -26,13 +26,11 @@ model of Flux.
 
 Here are some points to choose `ffux` over other Flux implementations:
 
-  * **Extremely simple** - Only single function needed: `createStore`
-  * **Boilerplate-free** - Your almost every code line is effective
+  * **Expressive** - All the power of FRP is on your hand
+  * **Extremely simple** - Only two functions needed: `createStore` and `ffux`
   * **Library/view agnostic** - Drop React and use with jQuery if you want ;-)
-  * **Testable** - Stores are completely independent, thus mocking the endpoints is extremely easy
-  * **Hot-reloadble** - Your application state can be re-constructed at any point
-  * **Lightweight** - The whole library is under 150 LOC of ES6. :-)
-  * **Expressive** - Design your own data flow by using FRP techniques you like the most
+  * **Explicit** - See the structure of your application with a single glance
+  * **Lightweight** - The whole library is under 200 LOC of ES6. :-)
 
 Well... You must see it by yourself:
 
