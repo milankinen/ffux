@@ -1,0 +1,17 @@
+{
+  "name": "ffux-todos-example-rx",
+  "version": "0.0.1",
+  "author": "Matti Lankinen <m.lankinen@iki.fi>",
+  "license": "MIT",
+  "scripts": {
+    "start": "browserify app.js -t babelify > bundle.js && open index.html"
+  },
+  "dependencies": {
+    "babelify": "6.1.2",
+    "browserify": "10.2.4",
+    "ffux": "latest",
+    "lodash": "3.9.3",
+    "react": "0.13.3",
+    "rx": "2.5.3"
+  }
+}

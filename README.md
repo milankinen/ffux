@@ -1,7 +1,7 @@
 # ffux
 
-Flux implementation for Functional Reactive Programming with [Bacon.js](https://github.com/baconjs/bacon.js)
-and minimal boilerplate. (RxJs support coming soon...)
+Flux implementation for Functional Reactive Programming with 
+[Bacon.js](https://github.com/baconjs/bacon.js) or [RxJS](https://github.com/Reactive-Extensions/RxJS). 
 
 [![npm version](https://badge.fury.io/js/ffux.svg)](http://badge.fury.io/js/ffux)
 [![Build Status](https://travis-ci.org/milankinen/ffux.svg?branch=master)](https://travis-ci.org/milankinen/ffux)
@@ -85,9 +85,13 @@ dispatcher.listen((model) => {
   
 ## How to use?
 
-Install dependencies with npm and start coding
+Install dependencies with npm and start coding. For Bacon.js users:
 
     npm i --save ffux baconjs
+    
+For RxJS users:
+
+    npm i --save ffux rx
     
     
 ## API
@@ -95,18 +99,26 @@ Install dependencies with npm and start coding
 `ffux` is designed to be used with ES6 but it can be used with ES5 as well.
 In order to to use `fflux` you must require it to your project:
 
+If you are using Bacon.js:
 ```javascript 
 const ffux = require("ffux")
 ```
+
+If you are using RxJS:
+```javascript 
+const ffux = require("ffux/rx")
+``` 
+
 ### `createStore({[actions,] state}) -> StoreFactory`
 
 Creates a new store factory that contains the given actions names and state
 initialization function.
 
 * Initial state and store actions (and dependencies) are passed to the state initialization function by `ffux`
-* State initialization function must return `Bacon.Property` 
+* State initialization function must return `Bacon.Property` or `Rx.Observable` with `.startWith(initialState`)
 
 ```javascript 
+// Bacon.js
 const CounterStore = ffux.createStore({
   actions: ["icrement", "resetAsync"],
   // Parameters in state initialization function:
@@ -125,6 +137,20 @@ const CounterStore = ffux.createStore({
     return counterP
   }
 })
+
+// RxJS
+const CounterStore = ffux.createStore({
+  actions: ["icrement", "resetAsync"],
+  // same parameters as Bacon.js
+  state: (counter, {increment, resetAsync}) => {
+    const resetS   = resetAsync.delay(1000)
+    // ffux contains similar function to Bacon.update for RxJs users
+    // to ease store's state handling 
+    return ffux.update(counter,
+      increment, (state, delta) => state + delta,
+      resetS,    _ => 0
+    )
+  }
 ```
 
 Actions can take either zero, one or many parameters. When creating actions
