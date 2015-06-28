@@ -1,37 +1,71 @@
 const {expect} = require("chai"),
       Bacon    = require("baconjs"),
-      ffux     = require("../lib/ffux-bacon")
+      Rx       = require("rx"),
+      ffuxB    = require("../lib/ffux-bacon"),
+      ffuxR    = require("../lib/ffux-rx")
 
-const {createStore} = ffux
 
 describe("state stream creation", () => {
-
-  const Counter = createStore({
-    state: (counter) => Bacon.constant(counter)
+  describe("in baconjs", () => {
+    bacon(ffuxB)
   })
 
-  const Plus2 = createStore({
-    state: (value) => Bacon.constant(value + 2)
+  describe("in rxjs", () => {
+    rx(ffuxR)
   })
 
-  const NoProperty = createStore({
-    state: () => Bacon.never()
-  })
+  function bacon(ffux) {
+    const {createStore} = ffux
 
-
-  it("uses the given initial state to construct the store's state stream", done => {
-    ffux({a: Counter(2), b: Plus2(1)}).listen(({state}) => {
-      expect(state.a).to.equal(2)
-      expect(state.b).to.equal(3)
-      done()
+    const Counter = createStore({
+      state: (counter) => Bacon.constant(counter)
     })
-  })
 
-  it("throws an exception if store's state stream is not a Bacon.Property", done => {
-    try {
-      ffux({noProp: NoProperty()})
-    } catch (ignore) {
-      done()
-    }
-  })
+    const Plus2 = createStore({
+      state: (value) => Bacon.constant(value + 2)
+    })
+
+    const NoProperty = createStore({
+      state: () => Bacon.never()
+    })
+
+
+    it("uses the given initial state to construct the store's state stream", done => {
+      ffux({a: Counter(2), b: Plus2(1)}).listen(({state}) => {
+        expect(state.a).to.equal(2)
+        expect(state.b).to.equal(3)
+        done()
+      })
+    })
+
+    it("throws an exception if store's state stream is not a Bacon.Property", done => {
+      try {
+        ffux({noProp: NoProperty()})
+      } catch (ignore) {
+        done()
+      }
+    })
+  }
+
+  function rx(ffux) {
+    const {createStore} = ffux
+
+    const Counter = createStore({
+      state: (counter) => new Rx.BehaviorSubject(counter)
+    })
+
+    const Plus2 = createStore({
+      state: (value) => new Rx.BehaviorSubject(value + 2)
+    })
+
+    it("uses the given initial state to construct the store's state stream", done => {
+      ffux({a: Counter(2), b: Plus2(1)}).listen(({state}) => {
+        expect(state.a).to.equal(2)
+        expect(state.b).to.equal(3)
+        done()
+      })
+    })
+
+  }
+
 })
