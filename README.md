@@ -220,7 +220,7 @@ to the dispatcher. In that case remember that if action names clashes, an error
 is thrown during dispatcher initialization:
 
 ```javascript
-const dispatcher = ffux({counter, filter})
+const dispatcher = ffux({counter, filter}, {flatActions: true})
 dispatcher.listen(({state, actions}) => {
   // actions == {increment: Function(int), resetAsync: Function(), resetFilter: Function(string)}
   React.render(<MyApp state={state} actions={actions} />, ...)
