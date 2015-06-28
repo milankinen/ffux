@@ -32,7 +32,7 @@ Here are some points to choose `ffux` over other Flux implementations:
   * **Explicit** - See the structure of your application with a single glance
   * **Lightweight** - The whole library is under 200 LOC of ES6. :-)
 
-Well... You must see it by yourself:
+Well... You must see it yourself:
 
 ```javascript 
 const React = require("react"),
