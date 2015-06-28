@@ -13,10 +13,9 @@ Flux implementation for Functional Reactive Programming with
 ## Motivation
 
 Flux is the hottest keyword in the React circles nowadays. Although the 
-latest Flux implementation have moved towards functional paradigms
-(immutability, monadic state transform) they still introduce a lot of
-boilerplate, complexity and potential bugs that could be avoided by 
-adopting Functional Reactive Programming.
+latest Flux implementations have moved towards functional paradigms they 
+still introduce a lot of boilerplate, complexity and potential bugs that 
+could be avoided by adopting Functional Reactive Programming.
 
 The goal of this project is to remove all of the complexity and
 provide a simple way to harness the power of FRP by using the mental 
