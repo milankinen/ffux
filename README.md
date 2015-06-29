@@ -144,8 +144,8 @@ const CounterStore = ffux.createStore({
     // ffux contains similar function to Bacon.update for RxJs users
     // to ease store's state handling 
     return ffux.update(counter,
-      increment, (state, delta) => state + delta,
-      resetS,    _ => 0
+      [increment], (state, delta) => state + delta,
+      [resetS],    _ => 0
     )
   }
 ```
@@ -257,6 +257,50 @@ const filter = Filter("")
 const todos  = Todos([], {filter})
 ffux({todos, filter}).listen(...)
 ```
+
+### Isomorphic app development
+
+`ffux` has a native support for isomorphic application development. When you 
+have created your `ffux` dispatcher, you can get the initial state with 
+`.tak(callback)` method and use the fetched model to render your application
+in your server:
+
+```javascript 
+// appState.js
+export default function appState({filter: initFilter = "", todos: initTodos = []}) {
+  const filter = Filter(initFilter)
+  const todos  = Todos(initTodos, {filter})
+  return ffux({todos, filter})
+}
+```
+
+In the server:
+```javascipt
+// server.js
+const state = loadFromDB()
+appState(state).take(model => {
+  res.send(`<html>
+              <head></head>
+              <body>
+                <div id="app">${React.renderToString(<YourApp {...model} />)}</div>
+                <script type="text/javascript">
+                  window.INITIAL_STATE = ${JSON.stringify(model.state)};
+                </script>
+                <script type="text/javascript" src="site.js"></script>
+              </body>
+            </html>`)
+})
+``` 
+
+And in the browser:
+```javascript
+// site.js
+appState(window.INITIAL_STATE).listen(model => {
+  React.render(<YourApp {...model} />, document.getElementById("app"))
+})
+```
+
+For more information, see isomorphic examples from `examples` folder.
 
 ## License
 

@@ -1,6 +1,6 @@
 {
   "name": "ffux",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Functional Reactive Flux implementation without boilerplate",
   "author": "Matti Lankinen <m.lankinen@iki.fi>",
   "license": "MIT",
