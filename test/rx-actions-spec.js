@@ -13,8 +13,8 @@ describe("rx actions", () => {
       const resetAsync = reset.flatMap(([timeout, value]) => Rx.Observable.of(value).delay(timeout))
 
       return update(counter,
-        increment,  (state, delta) => state + delta,
-        resetAsync, (_, value) => value
+        [increment],  (state, delta) => state + delta,
+        [resetAsync], (_, value) => value
       )
     }
   })

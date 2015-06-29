@@ -144,8 +144,8 @@ const CounterStore = ffux.createStore({
     // ffux contains similar function to Bacon.update for RxJs users
     // to ease store's state handling 
     return ffux.update(counter,
-      increment, (state, delta) => state + delta,
-      resetS,    _ => 0
+      [increment], (state, delta) => state + delta,
+      [resetS],    _ => 0
     )
   }
 ```
