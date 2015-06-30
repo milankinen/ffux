@@ -1,20 +1,25 @@
 const {expect} = require("chai"),
-      Bacon    = require("baconjs"),
+      Rx       = require("rx"),
       {listen} = require("./test-utils"),
-      ffux     = require("../lib/ffux-bacon")
+      ffux     = require("../lib/ffux-rx")
 
 const {createStore} = ffux
 
-describe("dependencies", () => {
+describe("rx dependencies", () => {
 
   const Filter = createStore({
     actions: ["resetFilter"],
-    state: (initial, {resetFilter}) => resetFilter.scan(initial, (_, value) => value)
+    state: (initial, {resetFilter}) => {
+      return resetFilter
+        .startWith(initial)
+        .scan(initial, (_, value) => value)
+    }
   })
 
   const Items = createStore({
     state: (items, _, {filter}) => {
-      return Bacon.combineTemplate({items, f: filter})
+      return Rx.Observable
+        .combineLatest(Rx.Observable.return(items), filter, (items, f) => ({items, f}))
         .map(({items, f}) => items.filter(it => it.indexOf(f) !== -1))
     }
   })
@@ -23,14 +28,16 @@ describe("dependencies", () => {
     const filter = Filter(""),
           items  = Items(["foobar", "tsers"], {filter})
 
-    listen(ffux({filter, items}))
+    listen(ffux({items, filter}))
       .step(({state: {items, filter}, actions: {filter: {resetFilter}}}) => {
         expect(filter).to.equal("")
         expect(items).to.deep.equal(["foobar", "tsers"])
         resetFilter("tse")
       })
-      .step(({state: {items, filter}}) => {
+      .step(({state: {filter}}) => {
         expect(filter).to.equal("tse")
+      })
+      .step(({state: {items}}) => {
         expect(items).to.deep.equal(["tsers"])
         done()
       })
