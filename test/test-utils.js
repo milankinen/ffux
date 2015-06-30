@@ -1,12 +1,10 @@
 
 
-export function listen(dispatcher) {
-  const steps = []
+export function listen(dispatcher, steps = []) {
   return {step, exec}
 
   function step(fn) {
-    steps.push(fn)
-    return {step, exec}
+    return listen(dispatcher, [...steps, fn])
   }
   function exec() {
     dispatcher.listen(model => {
