@@ -19,9 +19,10 @@
   ],
   "main": "index.js",
   "scripts": {
-    "test": "mocha --compilers js:babel/register --recursive test/*",
-    "test-with-coverage": "istanbul cover ./node_modules/mocha/bin/_mocha -- --compilers js:babel/register --recursive test/*",
+    "test": "npm run mocha -- --recursive test/*",
     "prepublish": "npm run dist",
+    "mocha": "mocha --compilers js:babel/register",
+    "test-with-coverage": "istanbul cover ./node_modules/mocha/bin/_mocha -- --compilers js:babel/register --recursive test/*",
     "dist": "mkdir -p dist && babel lib --source-maps inline --modules umd --out-dir dist"
   },
   "devDependencies": {
