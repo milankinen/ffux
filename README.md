@@ -262,7 +262,7 @@ ffux({todos, filter}).listen(...)
 
 `ffux` has a native support for isomorphic application development. When you 
 have created your `ffux` dispatcher, you can get the initial state with 
-`.tak(callback)` method and use the fetched model to render your application
+`.take(callback)` method and use the fetched model to render your application
 in your server:
 
 ```javascript 
