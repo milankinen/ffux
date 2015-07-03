@@ -30,7 +30,7 @@ describe("baconjs state stream creation", () => {
 
   it("throws an exception if store's state stream is not a Bacon.Property", done => {
     try {
-      ffux({noProp: NoProperty()})
+      NoProperty()
     } catch (ignore) {
       done()
     }

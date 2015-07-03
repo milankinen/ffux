@@ -34,21 +34,28 @@ describe("rx dependencies", () => {
         expect(items).to.deep.equal(["foobar", "tsers"])
         resetFilter("tse")
       })
-      .step(({state: {filter}}) => {
-        expect(filter).to.equal("tse")
-      })
       .step(({state: {items}}) => {
         expect(items).to.deep.equal(["tsers"])
+      })
+      .step(({state: {filter}}) => {
+        expect(filter).to.equal("tse")
         done()
       })
       .exec()
   })
 
-  it("throw exception if state model does not contain all dependencies", done => {
-    try {
-      ffux({items: Items([], {filter: Filter()})})
-    } catch(ignore) {
-      done()
-    }
+  it("can contain anything", done => {
+    const Store = createStore({
+      state: (str, _, {value}) => {
+        return new Rx.BehaviorSubject(str + value)
+      }
+    })
+
+    listen(ffux({str: Store("tsers", {value: "!"})}))
+      .step(({state: {str}}) => {
+        expect(str).to.equal("tsers!")
+        done()
+      })
+      .exec()
   })
 })

@@ -37,11 +37,18 @@ describe("baconjs dependencies", () => {
       .exec()
   })
 
-  it("throw exception if state model does not contain all dependencies", done => {
-    try {
-      ffux({items: Items([], {filter: Filter()})})
-    } catch(ignore) {
-      done()
-    }
+  it("can contain anything", done => {
+    const Store = createStore({
+      state: (str, _, {value}) => {
+        return Bacon.constant(str + value)
+      }
+    })
+
+    listen(ffux({str: Store("tsers", {value: "!"})}))
+      .step(({state: {str}}) => {
+        expect(str).to.equal("tsers!")
+        done()
+      })
+      .exec()
   })
 })
