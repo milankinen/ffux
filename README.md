@@ -1,7 +1,7 @@
 # ffux
 
-Flux implementation for Functional Reactive Programming with 
-[Bacon.js](https://github.com/baconjs/bacon.js) or [RxJS](https://github.com/Reactive-Extensions/RxJS). 
+Flux implementation for Functional Reactive Programming with
+[Bacon.js](https://github.com/baconjs/bacon.js) or [RxJS](https://github.com/Reactive-Extensions/RxJS).
 
 [![npm version](https://badge.fury.io/js/ffux.svg)](http://badge.fury.io/js/ffux)
 [![Build Status](https://travis-ci.org/milankinen/ffux.svg?branch=master)](https://travis-ci.org/milankinen/ffux)
@@ -12,13 +12,13 @@ Flux implementation for Functional Reactive Programming with
 
 ## Motivation
 
-Flux is the hottest keyword in the React circles nowadays. Although the 
-latest Flux implementations have moved towards functional paradigms they 
-still introduce a lot of boilerplate, complexity and potential bugs that 
+Flux is the hottest keyword in the React circles nowadays. Although the
+latest Flux implementations have moved towards functional paradigms they
+still introduce a lot of boilerplate, complexity and potential bugs that
 could be avoided by adopting Functional Reactive Programming.
 
 The goal of this project is to remove all of the complexity and
-provide a simple way to harness the power of FRP by using the mental 
+provide a simple way to harness the power of FRP by using the mental
 model of Flux.
 
 
@@ -34,7 +34,7 @@ Here are some points to choose `ffux` over other Flux implementations:
 
 Well... You must see it yourself:
 
-```javascript 
+```javascript
 const React = require("react"),
       ffux  = require("ffux")
 
@@ -55,11 +55,11 @@ const App = React.createClass({
   render() {
     // ffux model contains two properties:
     //   * "state" contains the current state of the application
-    //   * "actions" contains the actions that can be performed (per store)
+    //   * "actions" contains the action creators that can be invoked
     const {counter} = this.props.state
 
-    // actions are just functions that can be called with arguments normally
-    const {incrementN, decrementOne} = this.props.actions.counter
+    // action creators are just functions that can be invoked with arguments normally
+    const {counter: {incrementN, decrementOne}} = this.props.actions
 
     return (
       <div>
@@ -79,46 +79,48 @@ dispatcher.listen((model) => {
   React.render(<App {...model} />, document.getElementById("app"))
 })
 ```
-  
+
 ## How to use?
 
 Install dependencies with npm and start coding. For Bacon.js users:
 
     npm i --save ffux baconjs
-    
+
 For RxJS users:
 
     npm i --save ffux rx
-    
-    
+
+
 ## API
 
 `ffux` is designed to be used with ES6 but it can be used with ES5 as well.
 In order to to use `fflux` you must require it to your project:
 
 If you are using Bacon.js:
-```javascript 
+```javascript
 const ffux = require("ffux")
 ```
 
 If you are using RxJS:
-```javascript 
+```javascript
 const ffux = require("ffux/rx")
-``` 
+```
 
-### `createStore({[actions,] state}) -> StoreFactory`
+### `createStore({[actions,] state}) -> StoreDef`
 
-Creates a new store factory that contains the given actions names and state
-initialization function.
+Creates a new store definition having the given actions and state stream.
 
-* Initial state and store actions (and dependencies) are passed to the state initialization function by `ffux`
-* State initialization function must return `Bacon.Property` or `Rx.Observable` with `.startWith(initialState`)
+Function takes object that can have two fields:
 
-```javascript 
+* `state` : Mandatory field that returns a `Bacon.Property` or `Rx.Observable`
+* `actions` : Optional array that contains store's actions. These actions are
+passed to the `state` function as EventStreams / Observables
+
+```javascript
 // Bacon.js
-const CounterStore = ffux.createStore({
-  actions: ["icrement", "resetAsync"],
-  // Parameters in state initialization function:
+const Counter = ffux.createStore({
+  actions: ["increment", "resetAsync"],
+  // Parameters in state initialization function are:
   //  1. initial state
   //  2. action streams of this store (Bacon.EventStreams) mapped behind their names
   //  3. dependencies if any (see below)
@@ -136,23 +138,77 @@ const CounterStore = ffux.createStore({
 })
 
 // RxJS
-const CounterStore = ffux.createStore({
-  actions: ["icrement", "resetAsync"],
-  // same parameters as Bacon.js
-  state: (counter, {increment, resetAsync}) => {
-    const resetS   = resetAsync.delay(1000)
-    // ffux contains similar function to Bacon.update for RxJs users
-    // to ease store's state handling 
-    return ffux.update(counter,
-      [increment], (state, delta) => state + delta,
-      [resetS],    _ => 0
-    )
+const Counter = ffux.createStore({
+  actions: ["increment"],
+  // same parameters as Bacon.js but now actions Rx.Observable instances
+  state: (counter, {increment}) => {
+    const resetS = resetAsync.delay(1000)
+    // state function must return an Rx.Observable
+    return increment
+      .scan(counter, (state, delta) => state + delta)
+      .startWith(counter)
   }
 ```
 
-Actions can take either zero, one or many parameters. When creating actions
-with zero or one parameter then that parameter is passed to the state stream
-as it is:
+### `ffux({<prop1>: Store, <prop2>: Store, ...}) -> Dispatcher`
+
+By using the `StoreDef` functions, you can instantiate actual store instances. In
+order to instantiate a store instance, you must call `StoreState`function with the
+store's  dinitial state:
+
+```javascript
+const counter = Counter(10)
+const Filter  = Filter("")  // another store
+```
+
+Once you've created the store instances you can use the to form your application
+**state model**. State model is just a flat JavaScript object containing store
+instances as values. *This state model should reflect your (initial) state*
+
+```javascript
+const stateModel = {counter: Counter(10), filter: Filter("")}
+```
+
+You can create a `ffux` dispatcher by using the state model. The created dispacher
+has one method: `.listen(callback)`. It can be used to listen your state changes.
+When the application state changes, a `{state, actions}` object containing the
+current state (schema reflects the state model) and action creators is passed
+to the callback function.
+
+```javascript
+const dispatcher = ffux({counter})
+dispatcher.listen(({state, actions}) => {
+  // state == {counter: 10}
+  // actions == {counter: {increment: <function>, resetAsync: <function>}}
+  React.render(<MyApp state={state} actions={actions} />, ...)
+})
+```
+
+### Action creators
+
+After you have created the dispatcher instance and started to listen the state
+model changes, you can use your stores' **action creators**. `ffux` creates these
+action creators automatically based on you `StoreDef` actions. These action creators
+are just plain functions that can be accessed from inside the `dispacher.listen`
+callback:
+
+```javascript
+const Filter = ffux.createStore({
+  actions: ["resetFilter"],
+  state: (initialState, {resetFilter}) => {
+    ...
+  }
+})
+
+ffux({filter: Filter("")}).listen(({state, actions}) => {
+  const resetFilter = actions.filter.resetFilter
+  console.log(resetFilter) // => "function"
+})
+```
+
+Action creators can be invoked with either zero, one or many parameters. When
+action creator is invoked with zero or one parameter then that parameter is
+passed to the action event stream as it is:
 
 ```javascript
 const Filter = ffux.createStore({
@@ -162,6 +218,7 @@ const Filter = ffux.createStore({
     ...
   }
 })
+
 // and usage inside your app
 resetFilter("tsers")
 ```
@@ -173,7 +230,7 @@ into an array that is passed to the event stream:
 const Filter = ffux.createStore({
   actions: ["resetFilter"],
   state: (initialState, {resetFilter}) => {
-    const trimmedAsync = resetFilter.flatMap(([value, timeout]) => Bacon.later(timeout, value.trim()))
+    const trimmedAsync = resetFilter.flatMap(([value, timeout]) => ...)
     ...
   })
 })
@@ -181,48 +238,17 @@ const Filter = ffux.createStore({
 resetFilter("tsers", 1000)
 ```
 
-### Instantiation of stores
+#### Flattening actions creators
 
-Store instances can be created by using the `StoreFactory` function. It takes
-the store's initial state and optional dependencies (see below).
-
-```javascript 
-const counter = Counter(10)
-```
-### `ffux(stateModel) -> Dispatcher`
-
-Once you've created your stores, you can create a dispatcher instance by using
-the stores. Dispatcher takes one arguments:
-
-1. State model which is a plain object of stores instances. *This state model should reflect your (initial) state*
-
-Dispacher has one method: `.listen(callback)`. It can be used to listen your
-state changes. When the application state changes, `{state, actions}` object 
-containing the current state (schema reflects the state model) and actions 
-is passed to the callback function.
-
-This is the place to render your UI:
-
-```javascript
-const dispatcher = ffux({counter})
-dispatcher.listen(({state, actions}) => {
-  // state == {counter: 10}
-  // actions == {counter: {increment: Function(int), resetAsync: Function()}}
-  React.render(<MyApp state={state} actions={actions} />, ...)
-})
-```
-
-#### Flattening actions
-
-By default, actions are passed using the same schema as the state model. However,
+By default, action creators are passed using the same schema as the state model. However,
 you can flatten them into `actions` object by passing `flatActions = true` option
-to the dispatcher. In that case remember that if action names clashes, an error
+to the dispatcher. In that case remember that if action creator names clash, an error
 is thrown during dispatcher initialization:
 
 ```javascript
 const dispatcher = ffux({counter, filter}, {flatActions: true})
 dispatcher.listen(({state, actions}) => {
-  // actions == {increment: Function(int), resetAsync: Function(), resetFilter: Function(string)}
+  // actions == {increment: <function>, resetAsync: <function>, resetFilter: <function>}
   React.render(<MyApp state={state} actions={actions} />, ...)
 })
 ```
@@ -231,7 +257,7 @@ dispatcher.listen(({state, actions}) => {
 
 In complex applications, dependencies are inevitable. Normal Flux implementations
 use signals and publish-subscribe to resolve this. This method provides extremely
-loose coupling but it has a major drawback: when dependencies become more complex, 
+decoupled components but it has a major drawback: when dependencies become more complex,
 their management becomes chaotic and unpredictable because causations are not
 visible, thus there are high possibility to introduce e.g. cyclic dependencies.
 
@@ -240,19 +266,32 @@ This ensures you to think about responsibilities of your stores and reduce the
 possibility of circular dependencies and such kind of bugs.
 
 In `ffux` you can declare dependencies during the store instantiation by passing
-the dependencies as a second parameter to the store. Then these dependencies are
-available in the store's state initialization:
+the dependencies as a second parameter to the store. They can be anything - other
+stores, function or constants.
 
-```javascript 
+```javascript
+const todos = Todos([], {...here comes the dependencies...})
+```
+
+#### Stores are event streams!
+
+This is essential when defining dependencies. Since the stores are event streams,
+you can treat them like actions. Imagine that you have to-do items that depend on
+the current filter value (in order to detect which items to display). Since the
+`Filter` store is an event stream, you can pass it as a dependency to the `Todos`
+store and get filter changes directly:
+
+```javascript
 const Todos = createStore({
-  // dependencies are available via the 3rd parameter. they are the state
-  // streams of the stores and can be used like any other EventStream
   state: (items, {}, {filter}) => {
+    // every time when filter changes, it will run the filtering again, thus
+    // causing a state change with the new displayed items
     return Bacon.combineTemplate({items, filter})
-      .map(({items, filter}) => items.indexOf(filter) !== -1)
+      .map(({items, filter}) => items.filter(it => it.indexOf(filter) !== -1))
   }
 })
 
+// pass filter like any other dependency
 const filter = Filter("")
 const todos  = Todos([], {filter})
 ffux({todos, filter}).listen(...)
@@ -265,7 +304,7 @@ have created your `ffux` dispatcher, you can get the initial state with
 `.take(callback)` method and use the fetched model to render your application
 in your server:
 
-```javascript 
+```javascript
 // appState.js
 export default function appState({filter: initFilter = "", todos: initTodos = []}) {
   const filter = Filter(initFilter)
@@ -290,7 +329,7 @@ appState(state).take(model => {
               </body>
             </html>`)
 })
-``` 
+```
 
 And in the browser:
 ```javascript

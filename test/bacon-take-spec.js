@@ -4,7 +4,7 @@ const {expect} = require("chai"),
 
 const {createStore} = ffux
 
-describe("taking the first state from Bacon.js dispatcher", () => {
+describe("baconjs dispatcher .take", () => {
 
   const Items = createStore({
     state: (items, {}, {filter}) => {

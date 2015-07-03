@@ -5,7 +5,7 @@ const {expect} = require("chai"),
 
 const {createStore} = ffux
 
-describe("actions", () => {
+describe("baconjs actions", () => {
 
   const Counter = createStore({
     actions: ["increment", "reset"],

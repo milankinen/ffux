@@ -31,7 +31,7 @@ describe("rx .update", () => {
     actions: ["ready", "set", "go"],
     state: (initial, {ready, set, go}) => {
       return update(initial,
-        [ready, set, go], _ => 1
+        [ready, set, go], (initial, r, s, g) => initial + r + s + g
       )
     }
   })
@@ -65,12 +65,12 @@ describe("rx .update", () => {
     listen(ffux({upd: MultiObservables(0)}, {flatActions: true}))
       .step(({state, actions: {ready, set, go}}) => {
         expect(state.upd).to.equal(0)
-        defer(ready)
-        defer(set)
-        defer(go)
+        defer(() => ready(1))
+        defer(() => set(10))
+        defer(() => go(100))
       })
       .step(({state}) => {
-        expect(state.upd).to.equal(1)
+        expect(state.upd).to.equal(111)
         done()
       })
       .exec()

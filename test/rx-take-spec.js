@@ -4,7 +4,7 @@ const {expect} = require("chai"),
 
 const {createStore} = ffux
 
-describe("taking the first state from RxJS dispatcher", () => {
+describe("rx dispatcher .take", () => {
 
   const Items = createStore({
     state: (items, {}, {filter}) => {
