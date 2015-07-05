@@ -7,7 +7,7 @@ export function listen(dispatcher, steps = []) {
     return listen(dispatcher, [...steps, fn])
   }
   function exec() {
-    dispatcher.listen(model => {
+    return dispatcher.listen(model => {
       if (steps.length === 0) {
         throw new Error("No more steps expected but got " + JSON.stringify(model, null, 2))
       }
@@ -20,4 +20,8 @@ export function listen(dispatcher, steps = []) {
 
 export function defer(fn) {
   setTimeout(fn, 0)
+}
+
+export function delay(ms, fn) {
+  setTimeout(fn, ms)
 }
