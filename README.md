@@ -149,12 +149,12 @@ const Counter = ffux.createStore({
   actions: ["increment"],
   // same parameters as Bacon.js but now actions Rx.Observable instances
   state: (counter, {increment}) => {
-    const resetS = resetAsync.delay(1000)
     // state function must return an Rx.Observable
     return increment
       .scan(counter, (state, delta) => state + delta)
       .startWith(counter)
   }
+})
 ```
 
 ### `ffux({<prop1>: Store, <prop2>: Store, ...}) -> Dispatcher`
