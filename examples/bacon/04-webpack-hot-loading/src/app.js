@@ -1,17 +1,15 @@
 const React      = require("react"),
       {Listener} = require("ffux/react"),
       appState   = require("./appState"),
-      TodosApp   = require("./todosApp")
+      Todos      = require("./todos")
 
 export default React.createClass({
   render() {
     return (
-      <Listener initialState={this.props.initialState}
+      <Listener initialState={{items: [], filter: ""}}
                 dispatcher={appState}>
-        <TodosApp />
+        <Todos />
       </Listener>
     )
   }
 })
-
-

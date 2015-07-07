@@ -3,6 +3,7 @@ const React = require("react"),
       ffux  = require("ffux/rx"),
       _     = require("lodash")
 
+const {Listener} = require("ffux/react")
 const {createStore} = ffux
 
 const Todos = createStore({
@@ -35,8 +36,7 @@ const Filter = createStore({
   }
 })
 
-
-const App = React.createClass({
+const TodosApp = React.createClass({
   render() {
     const {newTodo, items, filter} = this.props.state
     const {resetFilter, setNewTodoText, createItem} = this.props.actions
@@ -46,13 +46,13 @@ const App = React.createClass({
         <input placeholder="Filter items.."
                value={filter}
                onChange={e => resetFilter(e.target.value)}
-               />
+          />
         <ul>{_.map(items, it => <li>{it.text}</li>)}</ul>
         <input placeholder="New item.."
                value={newTodo}
                onChange={e => setNewTodoText(e.target.value)}
                onKeyDown={handleCreateItem}
-               />
+          />
       </div>
     )
 
@@ -65,13 +65,22 @@ const App = React.createClass({
   }
 })
 
-;(function() {
-  const filter  = Filter("")
-  const items   = Todos([], {filter})
-  const newTodo = NewTodo("")
+const App = React.createClass({
+  getDispatcher(state = {}) {
+    const filter  = Filter(state.filter || "")
+    const items   = Todos(state.items || [], {filter})
+    const newTodo = NewTodo(state.newTodo || "")
 
-  ffux({filter, items, newTodo}, {flatActions: true})
-    .listen((model) => {
-      React.render(<App {...model} />, document.getElementById("app"))
-    })
-})()
+    return ffux({filter, items, newTodo}, {flatActions: true})
+  },
+
+  render() {
+    return (
+      <Listener dispatcher={this.getDispatcher}>
+        <TodosApp />
+      </Listener>
+    )
+  }
+})
+
+React.render(<App />, document.getElementById("app"))
