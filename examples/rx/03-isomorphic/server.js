@@ -1,7 +1,7 @@
 const express  = require("express"),
       React    = require("react"),
       appState = require("./appState"),
-      App      = require("./app")
+      TodosApp = require("./todosApp")
 
 
 const app = express()
@@ -15,7 +15,7 @@ app.get("/", function (req, res) {
         <html>
           <head><title>ffux isomorphic example w/ RxJs</title></head>
           <body>
-            <div id="app">${React.renderToString(<App {...model} />)}</div>
+            <div id="app">${React.renderToString(<TodosApp {...model} />)}</div>
             <script type="text/javascript">
               window.INITIAL_STATE = ${JSON.stringify(model.state)};
             </script>

@@ -37,6 +37,8 @@ Well... You must see it yourself:
 ```javascript
 const React = require("react"),
       ffux  = require("ffux")
+      
+const {Listener} = require("ffux/react")
 
 const {createStore} = ffux
 
@@ -51,7 +53,7 @@ const Counter = createStore({
   }
 })
 
-const App = React.createClass({
+const CounterApp = React.createClass({
   render() {
     // ffux model contains two properties:
     //   * "state" contains the current state of the application
@@ -71,13 +73,18 @@ const App = React.createClass({
   }
 })
 
-const stateModel   = {counter: Counter(10)}
-const dispatcher   = ffux(stateModel)
-
-// let's rock
-dispatcher.listen((model) => {
-  React.render(<App {...model} />, document.getElementById("app"))
+const App = React.createClass({
+  render() {
+    return (
+      <Listener initialState={{counter: 10}}
+                dispatcher={state => ffux({counter: Counter(state.counter)})}>
+        <CounterApp />
+      </Listener>
+    )
+  }
 })
+
+React.render(<App />, document.getElementById("app"))
 ```
 
 ## How to use?
@@ -142,12 +149,12 @@ const Counter = ffux.createStore({
   actions: ["increment"],
   // same parameters as Bacon.js but now actions Rx.Observable instances
   state: (counter, {increment}) => {
-    const resetS = resetAsync.delay(1000)
     // state function must return an Rx.Observable
     return increment
       .scan(counter, (state, delta) => state + delta)
       .startWith(counter)
   }
+})
 ```
 
 ### `ffux({<prop1>: Store, <prop2>: Store, ...}) -> Dispatcher`
@@ -297,6 +304,38 @@ const todos  = Todos([], {filter})
 ffux({todos, filter}).listen(...)
 ```
 
+### Using React helper component
+
+`ffux` provides a helper component for React development: `<Listener>`. `Listener` 
+takes two properties: `initialState` and `dispatcher`. The first one is a JavaScript
+object that represents the initial state of your application. The second one is
+a function `(state) => Dispatcher` building a dispatcher instance from state object.
+
+Surround your application component with Listener: state and actions are propagated
+automatically to your application component.
+
+```javascript
+const {Listener} = require("ffux/react")
+
+const App = React.createClass({
+  render() {
+    return (
+      <Listener initialState={{counter: 10}}
+                dispatcher={state => ffux({counter: Counter(state.counter)})}>
+        <MyAppComponent />
+      </Listener>
+    )
+  }
+})
+
+React.render(<App />, document.getElementById("app"))
+``` 
+
+#### Hot (re)loading
+
+Yes. `Listener` component is hot-reloadable by default.
+
+
 ### Isomorphic app development
 
 `ffux` has a native support for isomorphic application development. When you 
@@ -340,6 +379,25 @@ appState(window.INITIAL_STATE).listen(model => {
 ```
 
 For more information, see isomorphic examples from `examples` folder.
+
+
+### Stopping the Dispatcher
+
+Dispatcher `.listen` method returns stop function that can be invoked
+in order to stop the event listening. After stop method is called, no
+new events are dispatched.
+
+```javascript 
+const dispatcher = ffux(...)
+const stop = dispatcher.listen(model => { ... })
+
+// you can stop listening events by calling the returned stop function
+stop()
+``` 
+
+Normally you shouldn't need to call the `stop` method from your application
+but if you are implementing e.g. your own hot reloading functionality,
+it may be useful.
 
 ## License
 

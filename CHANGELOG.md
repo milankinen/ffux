@@ -1,5 +1,12 @@
 # ffux version changes 
 
+## 0.8.0
+
+* Add way to stop dispatcher event listening
+* Add hot loading support with `<Listener>` component
+* Fix RxJs `createStore` example 
+
+
 ## 0.7.0
 
 * Stores are now event streams

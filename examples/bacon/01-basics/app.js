@@ -1,10 +1,11 @@
 const React = require("react"),
       ffux  = require("ffux")
 
+const {Listener} = require("ffux/react")
 const {createStore} = ffux
 
 const Counter = createStore({
-  actions: ['incrementN', 'decrementOne'],
+  actions: ["incrementN", "decrementOne"],
   state: (initialState, actionStreams) => {
     const {incrementN, decrementOne} = actionStreams
     // All Bacon.js tricks are permitted here!
@@ -14,15 +15,15 @@ const Counter = createStore({
   }
 })
 
-const App = React.createClass({
+const CounterApp = React.createClass({
   render() {
     // ffux model contains two properties:
     //   * "state" contains the current state of the application
-    //   * "actions" contains the actions that can be performed
+    //   * "actions" contains the action creators that can be invoked
     const {counter} = this.props.state
 
-    // actions are just functions that can be called with arguments normally
-    const {incrementN, decrementOne} = this.props.actions.counter
+    // action creators are just functions that can be invoked with arguments normally
+    const {counter: {incrementN, decrementOne}} = this.props.actions
 
     return (
       <div>
@@ -34,10 +35,15 @@ const App = React.createClass({
   }
 })
 
-const stateModel = {counter: Counter(10)}
-const dispatcher = ffux(stateModel)
-
-// let's rock
-dispatcher.listen((model) => {
-  React.render(<App {...model} />, document.getElementById("app"))
+const App = React.createClass({
+  render() {
+    return (
+      <Listener initialState={{counter: 10}}
+                dispatcher={state => ffux({counter: Counter(state.counter)})}>
+        <CounterApp />
+      </Listener>
+    )
+  }
 })
+
+React.render(<App />, document.getElementById("app"))
