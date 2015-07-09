@@ -168,7 +168,7 @@ const counter = Counter(10)
 const Filter  = Filter("")  // another store
 ```
 
-Once you've created the store instances you can use the to form your application
+Once you've created the store instances you can use them to form your application
 **state model**. State model is just a flat JavaScript object containing store
 instances as values. *This state model should reflect your (initial) state*
 
@@ -195,7 +195,7 @@ dispatcher.listen(({state, actions}) => {
 
 After you have created the dispatcher instance and started to listen the state
 model changes, you can use your stores' **action creators**. `ffux` creates these
-action creators automatically based on you `StoreDef` actions. These action creators
+action creators automatically based on your `StoreDef` actions. These action creators
 are just plain functions that can be accessed from inside the `dispacher.listen`
 callback:
 
