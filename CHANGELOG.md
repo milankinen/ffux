@@ -1,5 +1,9 @@
 # ffux version changes 
 
+## 0.8.1
+
+* Fix dispatcher stopping bug during Listener-component hot loading
+
 ## 0.8.0
 
 * Add way to stop dispatcher event listening
