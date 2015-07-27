@@ -1,8 +1,14 @@
 # ffux version changes 
 
+## 0.8.2
+
+* Remove non-needed merge when updating Listener component state (caused some live-reloading bugs sometimes)
+
+
 ## 0.8.1
 
 * Fix dispatcher stopping bug during Listener-component hot loading
+
 
 ## 0.8.0
 
